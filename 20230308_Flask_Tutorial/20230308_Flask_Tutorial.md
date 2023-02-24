@@ -52,3 +52,6 @@
 
 ### The 'Musk's latest adventures' page
 (i.e, a one-answer type of website, 'Is the Queen still alive?' type of thing. In this case, our project will display the latest headline about Elon Musk; use a simple free API like Google News API or the Guardian API)
+
+### The 'Florida Man' page
+(alternative option: users enter their date of birth and we give them the top news result for 'Florida Man')
