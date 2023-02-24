@@ -50,6 +50,9 @@
 
 #### Passing variables to templates
 
+### 'Is it prime?' page
+(i.e., user enters a number, page replies with whether or not it is a prime)
+
 ### The 'Musk's latest adventures' page
 (i.e, a one-answer type of website, 'Is the Queen still alive?' type of thing. In this case, our project will display the latest headline about Elon Musk; use a simple free API like Google News API or the Guardian API)
 
