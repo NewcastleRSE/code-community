@@ -1,0 +1,12 @@
+body {
+    background: lightblue;
+}
+
+h1 {
+    font-size: 5rem;
+}
+
+h1, h2, p {
+    width: fit-content;
+    margin: auto;
+}

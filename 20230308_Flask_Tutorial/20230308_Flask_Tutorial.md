@@ -112,7 +112,7 @@ That's it! It shouldn't take more than a few seconds, and now you have Flask ava
 #### Creating your first page
 
 ##### 1. Folder structure
-Folder structure is very important for Flask: your main app files will live in the root directory of your project. Other files (templates, javascript files, CSS files) will have their respective places (respectively in `\templates`, `\static` and `\static\style`)
+Folder structure is very important for Flask: your main app files will live in the root directory of your project. Other files (templates, javascript files, CSS files) will have their respective places (respectively in `\templates` and `\static`)
 
 2. `app.py`
 
@@ -233,18 +233,238 @@ def welcome(name):
 #### Templates
 
 ##### What are 'Templates'
+The keened-eye amongst you might have already noticed that, so far we are not actually producing webpages with Flask -- we are returning a simple `string` which, in most browsers, should be easily interpreted and displayed. In fact, if you open your browser's development tools (`Ctrl+Shift+i` in Chrome), you should see a document more or less like this:
 
-##### Flask's templating language: Jinja
+```html
+<html>
+    <head></head>
+    <body>
+        Hello World!
+    </body>
+</html>
+```
+Rather than returning strings, we can instead return full html tag, which should be rendered accordingly by our browser. So let's modify our 'Welcome' page slightly:
+```python
+@app.route('/welcome/<name>')
+def welcome(name):
+    return '<h1>Welcome</h1> <h2>' + name + '</h2>'
+```
+So if we visit that page and inspect it, we can see that inside the `<body>` we now have two headers (`<h1>` and `<h2>`). Conceivably, we can build an entire webpage simply by returning a string of valid html. Once again, just because we can, doesn't mean we should. Instead, we should use **templates**.
 
-##### Create a simple template
+Templates are ([quoth the documentation](https://flask.palletsprojects.com/en/2.2.x/tutorial/templates/)):
+> files that contain **static** data as well as placeholders for **dynamic** data.
 
-##### Rendering a template
+What this means, essentially, is that you will use templates to hardcode all the elements in the page that will not change (such as metadata, titles, navigation bars, etc.), and leave placeholders for elements that will change (i.e., variables for dynamic data.) In practice, a template looks much the same as an ordinary page.
+
+So let's create our first template:
+
+1. Create a new folder in the root of your project called `templates`
+2. Inside your new folder, create an html file called `home.html`
+3. Add a boilerplate html structure to your new file:
+```html
+<html lang="en">
+<head>
+ <meta charset="UTF-8">
+ <meta http-equiv="X-UA-Compatible" content="IE=edge">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Document</title>
+</head>
+<body>
+ 
+</body>
+</html>
+```
+Now, replace the content of the `<title>` tag with a title for your webpage -- this is the text that appears at the top of your browser. Let's say:
+```html
+<title>My first Flask project</title>
+```
+
+Inside your `<body>`, let's add a `<h1>` and a `<p>`, for example:
+```html
+<h1>Hello world!</h1>
+<p>This is my first project in Flask, and I'm using templates for the first time!</p>
+```
+
+At the end of this, your `home.html` should look something like this:
+
+```html
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My first Flask project</title>
+</head>
+<body>
+    <h1>Hello world!</h1>
+    <p>This is my first project in Flask, and I'm using templates for the first time!</p>
+</body>
+</html>
+```
+We should be good to go. But how should we actually tell Flask to use this file in the right place? That's where our first extension will come into play. Back in our `app.py` file, we need to import another function from the `flask` library, so that it reads:
+
+```python
+from flask import Flask, render_template
+```
+
+and we need to change our `hello_word()` function to return the template instead of a `string` of text, which will be:
+
+```python
+@app.route('/')
+def hello_world():
+    return render_template('home.html')
+```
+
+Notice that the main difference now is that instead of returning a `string`, we call the function `render_template` with the name of our page as a parameter. We don't need to specify any more than that because templates should always be in the `/templates` folder in Flask.
+
+Using `flask run` again, our homepage should contain our new `<h1>` and `<p>`.
 
 ##### Passing variables to templates
+That's all well and good for **static** data, but how about **dynamic** data? I.e., in the case of our 'Welcome' page that changes depending on the name that we pass it, how can we use a template to show that?
+This is where templates come into their own.
+
+Although what we have in `home.html` might look like plain vanilla HTML, what we are using is, in fact, a templating language called [Jinja](https://jinja.palletsprojects.com/en/3.1.x/). If you've ever used something like [Jekyll](https://jekyllrb.com/) to create a static page, you might be already familiar with templating languages (in Jekyll's case it's [Liquid](https://jekyllrb.com/docs/liquid/)). In essence, a templating language looks a lot like run of the mill HTML on steroids: it gives you the ability to have variables, and even some basic programmatic coding blocks like `if...else` statements and `for` loops. Variables are identified by double-curly braces:
+```jinja
+<p>{{ variable }}</p>
+```
+and instructions by curly braces and percent signs:
+```jinja
+{% if condition %}
+    <p>True</p>
+{% else %}
+    <p>False</p>
+{% endif %}
+```
+
+With that in mind, let's create another template in our `templates` folder. We'll call this one `welcome.html`. Again, we'll add some boilerplate HTML, replace the `<title>` with `<title>My first Flask project</title>`, and add the same `<h1>` that we have in `home.html` to the `<body>`. Below that, let's add:
+
+```jinja
+<h2>Welcome <em>{{ user_name }}</em></h2>
+```
+Rememeber, double-curly braces means we are passing a variable to the template, which means that now our `welcome.html` will expect to receive something called `user_name`. `welcome.html` should look something like this:
+
+```jinja
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My first Flask project</title>
+</head>
+<body>
+    <h1>Hello world!</h1>
+    <h2>Welcome <em>{{ user_name }}</em></h2>
+    
+</body>
+</html>
+```
+All we need to do now is simply change our `welcome()` function in `app.py` to render the template instead of returning the string. To do that, we simply write:
+
+```python
+@app.route('/welcome/<name>')
+def welcome(name):
+    return render_template('welcome.html', user_name = name)
+```
+
+The difference here is that in addition to passing the name of the template to the `render_template()` function, we are also passing a new parameter (which will be identified by `user_name`) that will take the value of the variable `name`: that is, whatever is passed through the URL.
+
+If we `flask run` again and visit our page, we should be able to see the differences.
 
 ##### Bases and extensions
+You might have noticed that between `home.html` and `welcome.html`, we repeated a fair amount of html. In fact, the only thing that changes is the line below the `<h1>`. Luckily, there's an easy way of addressing this in Jinja (and most other templating languages): by extending other templates.
 
+Simply put, we create a base -- i.e., whatever will be common  to all (or most) of our pages -- and in that base, we add placeholders for the bits of data we might want to change. So let's do that here. First, create another html file called `base.html` in the `templates` folder. That file will contain everything that is common to all our pages, namely:
+
+```jinja
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My first Flask project</title>
+</head>
+<body>
+    <h1>Hello world!</h1>
+    
+</body>
+</html>
+```
+Now, below that `<h1>` is the stuff we want to change, so we we'll add a marker to tell the Jinja that content in that position will change. We do this by creating a `block` like so:
+
+```jinja
+{% block blockname%}{% endblock %}
+```
+(blocks can be nested inside each other, so you always need to open and close them)
+
+So now we can add a block called `content` to our `base.html`:
+
+```jinja
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My first Flask project</title>
+</head>
+<body>
+    <h1>Hello world!</h1>
+    {% block content %}
+    {% endblock %}
+    
+</body>
+</html>
+```
+
+Nearly there. Now, what we need is to indicate in our child-pages that they will extend the `base.html` and that their content will replace the `block`. Let's take our `home.html` and replace it with:
+```jinja
+{% extends 'base.html' %}
+
+{% block content %}
+    <p>This is my first project in Flask, and I'm using templates for the first time!</p>
+{% endblock %}
+```
+There are two important instructions to take into account here: the first is the `{% extends 'base.html' %}`: this let's Jinja know that to create this html file, it needs to start from our `base.html`; the second is the indication of the block that will be replaced `{% block content %} ... {% endblock %}` -- this identifies which block will be replaced and whatever html code is inside it is what it will replace the block with.
+
+Let's do the same for our `welcome.html`:
+```jinja
+{% extends 'base.html' %}
+
+{% block content %}
+    <h2>Welcome <em>{{ user_name }}</em></h2>
+{% endblock %}
+```
+
+You can now create new templates for the `about` and `contact` page and you have a fully fledged webapp!
 ##### Styling
+The only thing left to talk about is what to do if we want our pages to look *good* (or at least less bad), i.e., how can we add some styling to it. You can, if you want, use frameworks like [Bootstrap](https://getbootstrap.com/), or basically anything that can be served via [CDN](https://en.wikipedia.org/wiki/Content_delivery_network), but in our case, we are talking about a run of the mill local `css` file.
+
+Truthfully, there is only two small differences between styling a regular html file, and a Flask app. The first is that our css file *must* be in the `static` folder, so let's begin by doing that: create a folder named `static` in the root of the project, and then an empty `style.css` inside that. Now write some basic styling, for example:
+
+```css
+body {
+    background: lightblue;
+}
+
+h1 {
+    font-size: 5rem;
+}
+
+h1, h2, p {
+    width: fit-content;
+    margin: auto;
+}
+```
+(All this does is centre the elements horizontally on the page, change the background colour, and make the `<h1>` a little bigger than normal)
+
+The second difference with styling a flask app is on how you load the stylesheet. We can do that on the `base.html` (which will automatically apply to all other pages), and add the following line to the `<head>`:
+```jinja
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+```
+Instead of using a relative location for the stylesheet as normal, you need instead to use a variable (i.e., between double-curly brackets) which will take the result of the `url_for` function, passing it the name of the folder (`static`), and the name of the file you need to load. When the page is generated, this is replaced by the relative URL for the stylesheet, and everything will work as normal.
+
+So if you `flask run` once again, your page should be a lovely pale blue, and things should be centered on the screen.
+
+And that's it! That's the basics of Flask -- stick around if you want to try your hands at some more complex projects.
 
 ### 'Is it prime?' page
 (i.e., user enters a number, page replies with whether or not it is a prime)
