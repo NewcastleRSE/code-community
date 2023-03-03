@@ -467,7 +467,88 @@ So if you `flask run` once again, your page should be a lovely pale blue, and th
 And that's it! That's the basics of Flask -- stick around if you want to try your hands at some more complex projects.
 
 ### 'Is it prime?' page
-(i.e., user enters a number, page replies with whether or not it is a prime)
+Although that was a fully-fledged webapp, it didn't need to be -- i.e., there was nothing really dynamic about it. So let's create another one that will actually do some calculations and return a result based on user input. We'll keep it simple still: we want a page that will let the user enter a number and it will determine whether or not it is a prime number.
+
+Let's begin by doing the same setup process: create a folder, a virtual environment, install Flask in the virtual environment, and create the `app.py` file.
+
+Let's also create a `templates` folder, and a `base.html` inside of it:
+
+```jinja
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Is it prime?</title>
+</head>
+<body>
+    <header>
+        <h1>Is it prime?</h1>
+        <h2>Let's find out whether your number is prime or not</h2>
+    </header>
+    {% block content %}
+    {% endblock %}
+</body>
+</html>
+```
+
+We'll also create a `home.html` that will extend this template. We want our first view to contain a little form that will have the space for the user to input a number and a submit button:
+
+```jinja    
+{% extends 'base.html' %}
+
+{% block content %}
+
+<form action="/calculate" method = 'post'>
+    <label for="number">Input your number</label>
+    <input type="text" id="number" name="number">
+    <input type="submit" value="Submit">
+</form>
+
+{% endblock %}
+```
+
+finally we add the necessary logic to the `app.py`:
+
+```python
+from flask import Flask, render_template
+
+app = Flask(__name__)
+
+@app.route('/')
+def home():
+    return render_template('home.html')
+```
+
+If we run and test the app, we should see a simple page with a form; if we submit, you'll see we get nowhere. That's because we need to create a new route (`/calculate`) which will take the input and figure out the answer.
+
+So let's do that:
+```python
+@app.route('/calculate', methods = ['POST'])
+def calculate():
+    number = request.form.get('number')
+    return number
+```
+
+Now we have two new things: the `route` decorator takes an extra argument (`methods = ['POST']` -- by default, routes only allow 'GET' requests but because the user is sending data in, we need to specify that this route should take a POST request instead), and we read the value introduced in the form by the user into a `number` variable (by using another flask function, `request` which we will need to import along with `render_template`). We then simply display the input number back to the user.
+
+We now have everything we need to know whether a number is prime or not, we just need to make some calculations to give the correct answer! Let's modify our `calculate()` function to do just that. We know a number is prime if it is divisible only by one and itself, so a naive solution is test all the numbers in between:
+
+```python
+@app.route('/calculate', methods = ['POST'])
+def calculate():
+    number = request.form.get('number')
+    number = int(number)
+    for i in range(2, number):
+        if number % i == 0:
+            return 'The number is not prime!'
+    return 'The number is prime!'
+```
+
+And there you have it. A fully functional, if slightly pointless, webapp.
+
+
+
 
 ### The 'Musk's latest adventures' page
 (i.e, a one-answer type of website, 'Is the Queen still alive?' type of thing. In this case, our project will display the latest headline about Elon Musk; use a simple free API like Google News API or the Guardian API)

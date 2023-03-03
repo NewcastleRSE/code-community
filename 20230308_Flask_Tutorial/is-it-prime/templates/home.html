@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<form action="/calculate" method = 'post'>
+    <label for="number">Input your number</label>
+    <input type="text" id="number" name="number">
+    <input type="submit" value="Submit">
+</form>
+
+{% endblock %}
