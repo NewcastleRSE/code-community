@@ -80,7 +80,7 @@ If you followed the instructions, you should have an open project on VS Code cal
 
 The first thing to do is not exclusive to Flask development, but rather good practice for every Python project. We will begin by creating a [virtual environment](https://realpython.com/python-virtual-environments-a-primer/). This will allow us to install all the libraries we will need for our project without messing up our default python installation. Start by:
 
-1. Open a terminal on VS Code (either with `Ctrl+Shift+'` or `Terminal>New Terminal`)
+1. Opening a terminal on VS Code (either with `Ctrl+Shift+'` or `Terminal>New Terminal`)
 2. In the terminal use `venv` to create a new virtual environment. The syntax for creation is:
 
 ```
@@ -165,6 +165,7 @@ def hello_world():
 ```
 
 5. Running the app
+
 To run the app, we once again turn to the terminal and execute the command:
 
 ```bash
@@ -341,7 +342,9 @@ With that in mind, let's create another template in our `templates` folder. We'l
 ```jinja
 <h2>Welcome <em>{{ user_name }}</em></h2>
 ```
-Rememeber, double-curly braces means we are passing a variable to the template, which means that now our `welcome.html` will expect to receive something called `user_name`. `welcome.html` should look something like this:
+Rememeber, double-curly braces means we are passing a variable to the template, which means that now our `welcome.html` will expect to receive something called `user_name`. 
+
+`welcome.html` should look something like this:
 
 ```jinja
 <html lang="en">
@@ -551,7 +554,90 @@ And there you have it. A fully functional, if slightly pointless, webapp.
 
 
 ### The 'Musk's latest adventures' page
-(i.e, a one-answer type of website, 'Is the Queen still alive?' type of thing. In this case, our project will display the latest headline about Elon Musk; use a simple free API like Google News API or the Guardian API)
+Let's try another one -- this time, we will work with API calls. The objective of this page is simply to show the latest headline about Elon Musk -- or Musk's latest adventure, if you will.
+
+We'll start in the same way we have before: creating a new folder for our project, creating a virtual environment, installing flask.
+
+For now, we begin simply by creating our default `app.py`:
+
+```python
+from flask import Flask
+
+app = Flask(__name__)
+
+@app.route('/')
+def home():
+    return 'Hello'
+```
+
+We'll leave the templating and styling for later because first, we need to figure out how to get the headlines.
+
+There are many flavours of news APIs, so you can always go on the hunt for one yourself. As an example, we will be using the [</newscatcher>](https://newscatcherapi.com/) API -- it is simple to use, and there is a free tier you can play around with. Just follow the instructions on the `Get API key`.
+
+Once you have the API, save it as [an environment variable](https://en.wikipedia.org/wiki/Environment_variable)!
+
+To work with the API, we will need the ability to make a call to the API, so we'll need to install a separate package. In the terminal, write:
+
+```bash
+pip install requests
+```
+
+And import `requests` in your `app.py`.
+
+Now let's take care of the code that will get the headlines. To keep things simple, we will separate this into it's own function, called `get_headline()`. Because we have a limited number of free calls to the API, we will only call it once a day -- we'll save the results in a `json` file that will have the date as it's name, in the following format:
+
+```bash
+2023-03-06.json
+```
+
+Once we have the headlines, either through the API or from the file, we will select a random headline from the top 10, extract it's title, source, and link to the article, and display that to the user. The complete function will look something like this:
+
+```python
+def get_headline():
+    # Defines the filename for today
+    filename = datetime.today().strftime('%Y-%m-%d') + '.json'
+
+    try:
+        # First it tries to see if the file already exists; if it does, skip everything that is in the except block
+        with open(filename, 'r') as file:
+            response = file.read()
+            response = json.loads(response)
+    except:
+        # If the file does not exist, we will need to make a call to the API
+
+        # The url to call
+        url = 'https://api.newscatcherapi.com/v2/search'
+
+        # The details of our query
+        querystring = {"q":"\"Elon Musk\" AND (twitter OR Tesla OR SpaceX OR OpenAI OR Paypal)", "countries": "US, CA, UK", "lang":"en","sort_by":"relevancy","page":"1", "from": "two days ago"}
+
+        # Your secret API key
+        API_KEY = os.getenv('NEWS_API_KEY')
+
+        # The key will be in the header
+        headers = {
+            "x-api-key": API_KEY
+        }
+
+        # Use the requests library to send the request to the API, adding the headers and the querystring. Result is stored in the response variable.
+        response = requests.request("GET", url, headers=headers, params=querystring)
+
+        # Once we get the full response, save it to a file for the next time someone visits the site
+        with open(filename, 'w') as file:
+            file.write(response.text)
+        
+        # decode the response into JSON
+        response = json.loads(response.text)
+
+    # If there are more than 10 articles, select from the top ten at random
+    if len(response['articles']) > 10:
+        return response['articles'][random.randint(0, 9)]
+    else:
+        # If not, select from all the articles at random
+        # (assumes there is at leas one article available)
+        return response['articles'][random.randint(0, len(response['articles']-1))]
+```
+
 
 ### The 'Florida Man' page
 (alternative option: users enter their date of birth and we give them the top news result for 'Florida Man')
